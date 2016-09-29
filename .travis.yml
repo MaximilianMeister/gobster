@@ -1,0 +1,15 @@
+language: go
+
+sudo: false
+
+go:
+  - 1.6
+  - tip
+
+install:
+  - go get github.com/shopspring/decimal
+  - go get github.com/franela/goblin
+  - for i in $(ls -d */); do pushd $i 2>&1 >/dev/null; go build .; popd 2>&1 >/dev/null; done
+
+script:
+  - for i in $(ls -d */); do pushd $i 2>&1 >/dev/null; go test -cover; popd 2>&1 >/dev/null; done
