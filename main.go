@@ -93,30 +93,68 @@ func main() {
 
 		messages := strings.Split(event.Message(), " ")
 		command := strings.Split(messages[0], "!")[1]
+		subcommand := ""
 		argc := len(messages) - 1
 		recipient := messages[argc]
 
-		if (len(messages) >= 2) && (messages[1] == "add") {
-			newQuote := strings.Join(messages[2:len(messages)][:], " ")
-			err := feed.Set(command, newQuote)
+		// determin if there is a subcommand
+		if len(messages) >= 2 {
+			subcommand = fmt.Sprintf("%s_%s", command, messages[1])
+			// make sure the subcommand exists
+			quote, err := feed.Get(subcommand)
+			if (quote == "") || (err != nil) {
+				subcommand = ""
+			}
+		}
+
+		// determine if we want to add a string to a main or a subcommand
+		newQuote := ""
+		if len(messages) >= 2 {
+			if messages[1] == "add" {
+				newQuote = strings.Join(messages[2:len(messages)][:], " ")
+			} else if (len(messages) >= 3) && (messages[2] == "add") {
+				newQuote = strings.Join(messages[3:len(messages)][:], " ")
+			}
+		}
+
+		if newQuote != "" {
+			var err error
+			if subcommand != "" {
+				err = feed.Set(subcommand, newQuote)
+			} else {
+				err = feed.Set(command, newQuote)
+			}
 			if err != nil {
 				ircobj.Privmsg(config.IrcChannel, config.BotSetErrorMsg)
-			} else {
+				return
+			} else { // successfully set
 				ircobj.Privmsg(config.IrcChannel, config.BotSetMsg)
+				return
 			}
-		} else {
+		} else if (len(messages) >= 2) && subcommand != "" { // get string from a subcommand
+			quote, err := feed.Get(subcommand)
+			if err != nil {
+				quote = config.BotGetErrorMsg
+			}
+			if argc >= 2 { // there is a recipient
+				ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", recipient, quote))
+			} else { // there is no recipient
+				ircobj.Privmsg(config.IrcChannel, quote)
+			}
+		} else { // get string from a main command
 			quote, err := feed.Get(command)
 			if err != nil {
 				quote = config.BotGetErrorMsg
 			}
 
-			if argc == 0 {
+			if argc == 0 { // there is no recipient
 				ircobj.Privmsg(config.IrcChannel, quote)
-			} else {
+			} else { // there is a recipient
 				ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", recipient, quote))
 			}
 		}
 	})
 
+	// start the api server
 	api.Serve()
 }
