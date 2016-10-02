@@ -36,7 +36,6 @@ func Get(listName string) (string, error) {
 		randomEntry = allEntries[rand.Intn(len(allEntries))]
 	}
 
-	fmt.Printf("GET: %s: %s\n", listName, randomEntry)
 	return randomEntry, nil
 }
 
