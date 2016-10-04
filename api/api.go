@@ -42,9 +42,12 @@ func Serve() {
 		}
 
 		var buffer bytes.Buffer
+		buffer.WriteString("[\n")
 		for i, n := range quotes {
-			buffer.WriteString(fmt.Sprintf("%d. %s\n", i, n))
+			_ = i
+			buffer.WriteString(fmt.Sprintf("  \"%s\",\n", n))
 		}
+		buffer.WriteString("]\n")
 
 		return c.String(http.StatusOK, buffer.String())
 	})
