@@ -76,23 +76,34 @@ func main() {
 	ircobj.Privmsg(config.IrcChannel, config.IrcWelcomeMsg)
 
 	ircobj.AddCallback("PRIVMSG", func(event *irc.Event) {
-		if !strings.Contains(event.Message(), "!") {
-			if strings.Contains(event.Message(), config.IrcBotnick) {
-				quote, err := feed.Get(config.DefaultBucket)
-				if err != nil {
-					// no default bucket exists, so give a generic answer
-					ircobj.Privmsg(config.IrcChannel, "There is nothing more to say")
-					return
-				}
-				ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", event.Nick, quote))
-				return
-			} else {
+		if event.Message() == "!help" {
+			help := "!command [subcommand] add Everything that follows will be added to command [subcommand]"
+			ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", event.Nick, help))
+			return
+		}
+		if strings.Contains(event.Message(), config.IrcBotnick) { // someone talks to the bot directly
+			quote, err := feed.Get(config.DefaultBucket)
+			if err != nil {
+				// no default bucket exists, so give a generic answer
+				ircobj.Privmsg(config.IrcChannel, "There is nothing more to say")
 				return
 			}
+			ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", event.Nick, quote))
+			return
 		}
 
 		messages := strings.Split(event.Message(), " ")
+
+		if !strings.HasPrefix(event.Message(), "!") { // there is no ! prefix
+			return
+		}
+
 		command := strings.Split(messages[0], "!")[1]
+
+		if command == "" { // nothing to do
+			return
+		}
+
 		subcommand := ""
 		argc := len(messages) - 1
 		recipient := messages[argc]
