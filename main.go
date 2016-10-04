@@ -42,6 +42,14 @@ type Configuration struct {
 	DefaultBucket  string `json:"default_bucket"`
 }
 
+func Usage() string {
+	return "Gobster Usage:\n" +
+		"Available commands:\n" +
+		"  add: Add a message to a [sub]command\n" +
+		"    '!command add This is a quote'\n" +
+		"    '!command subcommand add This is a quote'"
+}
+
 // GetConfig returns a type Configuration with values defined in gobster.json
 func GetConfig() (Configuration, error) {
 	config := &Configuration{}
@@ -77,8 +85,7 @@ func main() {
 
 	ircobj.AddCallback("PRIVMSG", func(event *irc.Event) {
 		if event.Message() == "!help" {
-			help := "!command [subcommand] add Everything that follows will be added to command [subcommand]"
-			ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", event.Nick, help))
+			ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", event.Nick, Usage()))
 			return
 		}
 		if strings.Contains(event.Message(), config.IrcBotnick) { // someone talks to the bot directly
