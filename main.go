@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/thoj/go-ircevent"
 
@@ -28,6 +31,8 @@ import (
 //   "bot_set_error_msg": "Could not add message",
 //   "bot_get_error_msg": "Could not find message",
 //   "default_bucket": "bucket" # the default key/bucket from where to fetch a random entry
+//   "delay_on_msg": "false" # delay an answer of the bot when asked directly
+//   "delay_seconds": "60" # maximum number of random seconds delay
 // }
 type Configuration struct {
 	IrcServer      string `json:"irc_server"`
@@ -40,6 +45,8 @@ type Configuration struct {
 	BotSetErrorMsg string `json:"bot_set_error_msg"`
 	BotGetErrorMsg string `json:"bot_get_error_msg"`
 	DefaultBucket  string `json:"default_bucket"`
+	DelayOnMsg     string `json:"delay_on_msg"`
+	DelaySeconds   string `json:"delay_seconds"`
 }
 
 // GetConfig returns a type Configuration with values defined in gobster.json
@@ -90,6 +97,17 @@ func main() {
 				// no default bucket exists, so give a generic answer
 				ircobj.Privmsg(config.IrcChannel, "There is nothing more to say")
 				return
+			}
+
+			if config.DelayOnMsg == "true" {
+				r := rand.New(rand.NewSource(time.Now().UnixNano()))
+				i, err := strconv.Atoi(config.DelaySeconds)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				num := r.Intn(i)
+				time.Sleep(time.Duration(num) * time.Second)
 			}
 			ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", event.Nick, quote))
 			return
