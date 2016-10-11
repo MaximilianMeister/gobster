@@ -100,6 +100,10 @@ func main() {
 	ircobj.Join(config.IrcChannel)
 	ircobj.Privmsg(config.IrcChannel, config.IrcWelcomeMsg)
 
+	ircobj.AddCallback("001", func(event *irc.Event) {
+		ircobj.Join(config.IrcChannel)
+	})
+
 	ircobj.AddCallback("PRIVMSG", func(event *irc.Event) {
 		if !strings.Contains(event.Arguments[0], config.IrcChannel) {
 			return
