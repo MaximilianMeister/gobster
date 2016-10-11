@@ -83,6 +83,9 @@ func main() {
 	ircobj.Privmsg(config.IrcChannel, config.IrcWelcomeMsg)
 
 	ircobj.AddCallback("PRIVMSG", func(event *irc.Event) {
+		if !strings.Contains(event.Arguments[0], config.IrcChannel) {
+			return
+		}
 		if event.Message() == "!help" {
 			ircobj.Privmsg(config.IrcChannel, "Gobster Usage:")
 			ircobj.Privmsg(config.IrcChannel, "Available commands:")
