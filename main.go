@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -30,9 +31,10 @@ import (
 //   "bot_set_msg": "Successfully added message",
 //   "bot_set_error_msg": "Could not add message",
 //   "bot_get_error_msg": "Could not find message",
-//   "default_bucket": "bucket" # the default key/bucket from where to fetch a random entry
-//   "delay_on_msg": "false" # delay an answer of the bot when asked directly
-//   "delay_seconds": "60" # maximum number of random seconds delay
+//   "default_bucket": "bucket", # the default key/bucket from where to fetch a random entry
+//   "delay_on_msg": "false", # delay an answer of the bot when asked directly
+//   "delay_seconds": "60", # maximum number of random seconds delay
+//   "local_scripts": "false" # try to run local scripts in the working directory
 // }
 type Configuration struct {
 	IrcServer      string `json:"irc_server"`
@@ -47,6 +49,7 @@ type Configuration struct {
 	DefaultBucket  string `json:"default_bucket"`
 	DelayOnMsg     string `json:"delay_on_msg"`
 	DelaySeconds   string `json:"delay_seconds"`
+	LocalScripts   string `json:"local_scripts"`
 }
 
 // GetConfig returns a type Configuration with values defined in gobster.json
@@ -68,6 +71,21 @@ func GetConfig() (Configuration, error) {
 	}
 
 	return *config, nil
+}
+
+// IsScript checks if there is a script in to execute
+func isScript(name string) bool {
+	files, _ := ioutil.ReadDir("./")
+	for _, f := range files {
+		if name == "gobster" || name == "gobster.db" || name == "gobster.json" {
+			return false
+		}
+		// check if the file exists and is executable
+		if name == f.Name() && (f.Mode()&0111).String() == "---x--x--x" {
+			return true
+		}
+	}
+	return false
 }
 
 func main() {
@@ -131,6 +149,22 @@ func main() {
 		subcommand := ""
 		argc := len(messages) - 1
 		recipient := messages[argc]
+
+		// look if there is a script to execute
+		if config.LocalScripts == "true" && isScript(command) {
+			quote, err := exec.Command("./pr0").Output()
+			if err != nil {
+				ircobj.Privmsg(config.IrcChannel, config.BotGetErrorMsg)
+			}
+
+			quoteFormatted := fmt.Sprintf("%s", quote)
+			if argc == 0 { // there is no recipient
+				ircobj.Privmsg(config.IrcChannel, quoteFormatted)
+			} else {
+				ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", event.Nick, quoteFormatted))
+			}
+			return
+		}
 
 		// determin if there is a subcommand
 		if len(messages) >= 2 {
