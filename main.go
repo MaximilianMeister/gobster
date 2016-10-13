@@ -167,11 +167,7 @@ func main() {
 			}
 
 			quoteFormatted := fmt.Sprintf("%s", quote)
-			if argc == 0 { // there is no recipient
-				ircobj.Privmsg(config.IrcChannel, quoteFormatted)
-			} else {
-				ircobj.Privmsg(config.IrcChannel, fmt.Sprintf("%s: %s", event.Nick, quoteFormatted))
-			}
+			ircobj.Privmsg(config.IrcChannel, quoteFormatted)
 			return
 		}
 
