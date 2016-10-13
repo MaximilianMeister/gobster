@@ -161,7 +161,7 @@ func main() {
 
 		// look if there is a script to execute
 		if config.LocalScripts == "true" && isScript(command) {
-			quote, err := exec.Command("./pr0").Output()
+			quote, err := exec.Command(fmt.Sprintf("./%s", command), recipient).Output()
 			if err != nil {
 				ircobj.Privmsg(config.IrcChannel, config.BotGetErrorMsg)
 			}
