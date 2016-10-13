@@ -58,6 +58,14 @@ func GetAll(listName string) ([]string, error) {
 		return []string{}, err
 	}
 
+	// remove the list again if it is empty
+	if len(allEntries) == 0 {
+		err := list.Remove()
+		if err != nil {
+			fmt.Printf("Could not remove the list! %s", err)
+		}
+	}
+
 	return allEntries, nil
 }
 

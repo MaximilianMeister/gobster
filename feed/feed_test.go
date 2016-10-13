@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/franela/goblin"
+	"github.com/xyproto/simplebolt"
 )
 
 func TestOpen(t *testing.T) {
@@ -47,6 +48,17 @@ func TestGetAll(t *testing.T) {
 			quote, err := GetAll("somename")
 			g.Assert(err == nil).IsTrue()
 			g.Assert(reflect.TypeOf(quote).String()).Equal("[]string")
+		})
+		g.It("Should Not Create A New List", func() {
+			db, _ := Open()
+			list, _ := simplebolt.NewList(db, "notexist")
+			db.Close()
+			quote, err := GetAll("notexist")
+			g.Assert(err == nil).IsTrue()
+			g.Assert(len(quote) == 0)
+			last, err := list.GetLast()
+			g.Assert(err != nil)
+			g.Assert(last == "")
 		})
 	})
 }
