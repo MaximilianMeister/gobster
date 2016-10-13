@@ -105,6 +105,8 @@ func main() {
 	})
 
 	ircobj.AddCallback("PRIVMSG", func(event *irc.Event) {
+		// return immediately when it's a private conversation
+		// event.Arguments[0] is the channel name
 		if !strings.Contains(event.Arguments[0], config.IrcChannel) {
 			return
 		}
@@ -138,20 +140,23 @@ func main() {
 			return
 		}
 
+		// now parse the full message
 		messages := strings.Split(event.Message(), " ")
 
 		if !strings.HasPrefix(event.Message(), "!") { // there is no ! prefix
 			return
 		}
 
+		// get the command's name
 		command := strings.Split(messages[0], "!")[1]
-
-		if command == "" { // nothing to do
+		if command == "" { // no command means nothing to do
 			return
 		}
 
+		// check for subcommand
 		subcommand := ""
 		argc := len(messages) - 1
+		// recipient is always the last arg
 		recipient := messages[argc]
 
 		// look if there is a script to execute
@@ -170,7 +175,7 @@ func main() {
 			return
 		}
 
-		// determin if there is a subcommand
+		// determine if there is a subcommand
 		if len(messages) >= 2 {
 			subcommand = fmt.Sprintf("%s_%s", command, messages[1])
 			// make sure the subcommand exists
